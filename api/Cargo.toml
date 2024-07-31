@@ -1,0 +1,11 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = "4.8.0"
+serde = "1.0.204"
+serde_json = "1.0.120"
+core = { path = "../core" }
+

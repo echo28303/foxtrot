@@ -1,0 +1,12 @@
+[package]
+name = "consensus"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+blake3 = "1.5.3"
+chrono = "0.4.38"
+serde = { version = "1.0.204", features = ["derive"] }
+cryptography = { path = "../cryptography" }
+k256 = "0.13.3"
+

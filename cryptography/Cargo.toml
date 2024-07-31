@@ -1,0 +1,12 @@
+[package]
+name = "cryptography"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+k256 = "0.13.3"
+rand_core = "0.6.4"
+base64 = "0.13.0"
+blake3 = "1.5.3"
+serde = { version = "1.0.204", features = ["derive"] }
+
