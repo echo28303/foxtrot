@@ -9,16 +9,16 @@ use crate::db::Database;
 use cryptography::schnorr::{sign_message, verify_message};
 use zero_knowledge::proof::{ZkProver, create_trace, verify_proof, Proof};
 use winterfell::math::fields::f128::BaseElement;
-use common::config::{INITIAL_DIFFICULTY, TRANSITION_BLOCK, TARGET_BLOCK_TIME, MAX_BLOCK_SIZE, DIFFICULTY_ADJUSTMENT_WINDOW};
+use common::config::{INITIAL_DIFFICULTY, TARGET_BLOCK_TIME, MAX_BLOCK_SIZE, DIFFICULTY_ADJUSTMENT_WINDOW, MAXIMUM_SUPPLY};
 
 #[derive(Clone, Debug)]
 pub struct Blockchain {
     pub blocks: Vec<Block>,
     pub target_block_time: u64,
-    pub transition_block: u64,
     pub max_block_size: u64,
     pub difficulty_adjustment_window: u64,
     pub current_difficulty: u64,
+    pub current_supply: u64, // Track the current supply
     pub db: Arc<Mutex<Database>>,
 }
 
@@ -27,15 +27,16 @@ impl Blockchain {
         Self {
             blocks: vec![],
             target_block_time: TARGET_BLOCK_TIME,
-            transition_block: TRANSITION_BLOCK,
             max_block_size: MAX_BLOCK_SIZE as u64,
             difficulty_adjustment_window: DIFFICULTY_ADJUSTMENT_WINDOW as u64,
             current_difficulty: INITIAL_DIFFICULTY,
+            current_supply: 0, // Initialize current supply
             db: Arc::new(Mutex::new(Database::new(db_path))),
         }
     }
 
     pub fn add_block(&mut self, block: Block) {
+        self.current_supply += block.reward; // Update the current supply with the new block reward
         self.blocks.push(block.clone());
         // Store block in the database
         self.db.lock().unwrap().store_block(&block).expect("Failed to store block");
@@ -70,13 +71,19 @@ impl Blockchain {
         let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis();
         let nonce = 0;
 
-        let reward = if index < TRANSITION_BLOCK {
-            self.current_difficulty // Reward is equal to the difficulty of the block
-        } else {
-            0 // After the transition block, the reward is zero
-        };
+        let base_reward = self.current_difficulty; // Define a base reward
+        let reward = calculate_block_reward(self.current_supply, base_reward);
 
-        let mut new_block = Block::new(index, previous_hash.clone(), timestamp, nonce, miner.clone(), BlockSignature(EcdsaSignature::from_bytes(&[0u8; 64].into()).unwrap()), reward, vec![]);
+        let mut new_block = Block::new(
+            index,
+            previous_hash.clone(),
+            timestamp,
+            nonce,
+            miner.clone(),
+            BlockSignature(EcdsaSignature::from_bytes(&[0u8; 64].into()).unwrap()),
+            reward,
+            vec![],
+        );
         new_block.sign(private_key);
         self.add_block(new_block.clone());
 
@@ -117,5 +124,15 @@ impl Blockchain {
         );
         let message = hash.as_bytes();
         verify_message(message, &block.signature.0, public_key)
+    }
+}
+
+/// Calculates the block reward based on the current supply and the base reward.
+fn calculate_block_reward(current_supply: u64, base_reward: u64) -> u64 {
+    if current_supply + base_reward > MAXIMUM_SUPPLY {
+        // Adjust reward to not exceed MAXIMUM_SUPPLY
+        MAXIMUM_SUPPLY - current_supply
+    } else {
+        base_reward
     }
 }

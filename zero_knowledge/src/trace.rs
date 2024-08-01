@@ -1,9 +1,6 @@
 use winter_prover::TraceTable; // Use TraceTable from winter-prover
-use winter_math::{ToElements, FieldElement};
+use winter_math::{ ToElements, FieldElement };
 use winter_math::fields::f128::BaseElement;
-use blake3::Hasher; // Import Blake3 hasher
-use winter_utils::Serializable;
-use winterfell::Trace;
 
 pub struct PublicInputs {
     pub inputs: Vec<BaseElement>,
@@ -28,41 +25,4 @@ pub fn create_trace(inputs: Vec<BaseElement>) -> TraceTable<BaseElement> {
     }
 
     trace
-}
-
-pub fn generate_blake3_hash(trace: &TraceTable<BaseElement>) -> [u8; 32] {
-    let mut hasher = Hasher::new();
-    for row in 0..trace.length() {
-        for col in 0..trace.width() {
-            let elem = trace.get(col, row);
-            hasher.update(&Serializable::to_bytes(&elem));
-        }
-    }
-    *hasher.finalize().as_bytes()
-}
-
-pub trait ToBytes {
-    fn to_bytes(&self) -> Vec<u8>;
-}
-
-impl ToBytes for BaseElement {
-    fn to_bytes(&self) -> Vec<u8> {
-        Serializable::to_bytes(self)
-    }
-}
-
-impl ToBytes for TraceTable<BaseElement> {
-    fn to_bytes(&self) -> Vec<u8> {
-        let num_rows = self.length();
-        let num_columns = self.width();
-        let mut bytes = Vec::new();
-
-        for row in 0..num_rows {
-            for col in 0..num_columns {
-                let elem = self.get(col, row);
-                bytes.extend_from_slice(&Serializable::to_bytes(&elem));
-            }
-        }
-        bytes
-    }
 }

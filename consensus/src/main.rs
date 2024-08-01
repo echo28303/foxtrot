@@ -15,30 +15,6 @@ use winterfell::math::fields::f128::BaseElement;
 
 fn main() {
     // Initialize the blockchain
-   ### Complete `consensus/src/main.rs`
-
-Here's a comprehensive `main.rs` file for the consensus module:
-
-```rust
-// consensus/src/main.rs
-
-mod pos;
-mod pow;
-mod transition;
-
-use pos::{Blockchain, Block};
-use pow::ProofOfWork;
-use std::sync::{Arc, Mutex};
-use foxtrot::config::{
-    TARGET_BLOCK_TIME, TRANSITION_BLOCK, INITIAL_DIFFICULTY, MAX_BLOCK_SIZE,
-    DIFFICULTY_ADJUSTMENT_WINDOW,
-};
-use cryptography::schnorr::{generate_keypair, sign_message, verify_message};
-use zero_knowledge::winterfell::{ZkProver, create_trace, verify_proof};
-use winterfell::math::fields::f128::BaseElement;
-
-fn main() {
-    // Initialize the blockchain
     let blockchain = Arc::new(Mutex::new(Blockchain::new(
         TARGET_BLOCK_TIME,
         TRANSITION_BLOCK,

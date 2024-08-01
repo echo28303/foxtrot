@@ -23,6 +23,14 @@ generic-array = "1.1.0"
 winter-math = "0.9.0"
 winter-utils = "0.9.0"
 
+[features]
+testnet = []
+mainnet = []
+
 [[bin]]
-name = "src"
-path = "src/main.rs"
+name = "testnet"
+path = "src/testnet.rs"
+
+[[bin]]
+name = "mainnet"
+path = "src/mainnet.rs"
