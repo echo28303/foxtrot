@@ -6,7 +6,6 @@ pub struct PublicInputs {
     pub inputs: Vec<u8>,
 }
 
-// Implement the ToElements trait for PublicInputs if it's not already implemented
 impl ToElements<BaseElement> for PublicInputs {
     fn to_elements(&self) -> Vec<BaseElement> {
         // Convert your public inputs to elements here
@@ -16,8 +15,8 @@ impl ToElements<BaseElement> for PublicInputs {
 
 pub struct YourAir {
     trace_info: TraceInfo,
-    public_inputs: PublicInputs,
-    options: ProofOptions,
+    _public_inputs: PublicInputs,
+    _options: ProofOptions,
     context: AirContext<BaseElement>,
 }
 
@@ -33,8 +32,8 @@ impl Air for YourAir {
         let context = AirContext::new(trace_info.clone(), transition_degrees, num_transition_constraints, options.clone());
         Self {
             trace_info,
-            public_inputs,
-            options,
+            _public_inputs: public_inputs,
+            _options: options,
             context,
         }
     }

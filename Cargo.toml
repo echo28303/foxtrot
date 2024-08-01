@@ -18,13 +18,10 @@ resolver = "2"
 core = { path = "./core" }
 common = { path = "./common" }
 zero_knowledge = { path = "./zero_knowledge" }
-k256 = "0.13.3"
+cryptography = { path = "./cryptography" }
 generic-array = "1.1.0"
-typenum = "1.17.0"
-rand = "0.8.5"
 winter-math = "0.9.0"
-blake3 = "1.5.3"
-bincode = "1.3"
+winter-utils = "0.9.0"
 
 [[bin]]
 name = "src"

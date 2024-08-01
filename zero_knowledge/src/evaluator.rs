@@ -16,6 +16,7 @@ impl<'a, E: FieldElement<BaseField = winter_math::fields::f128::BaseElement>> Co
         _trace_lde: &T,
         _domain: &StarkDomain<E::BaseField>,
     ) -> CompositionPolyTrace<E> {
+        // Implement the logic for evaluating constraints
         unimplemented!()
     }
 }

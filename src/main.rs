@@ -1,26 +1,19 @@
 use core::block::{Block, Signature};
 use core::blockchain::Blockchain;
 use core::transaction::Transaction;
-use k256::ecdsa::{signature::Signer, SigningKey, VerifyingKey};
-use k256::elliptic_curve::generic_array::GenericArray;
-use typenum::U32;
 use common::config;
-use rand::rngs::OsRng;
-use zero_knowledge::proof::{ZkProver, create_trace, generate_blake3_hash};
+use zero_knowledge::proof::ZkProver;
 use winter_math::fields::f128::BaseElement;
-use blake3::Hasher;
+use cryptography::schnorr::{generate_keypair, sign_message, verify_message};
+use zero_knowledge::trace::{create_trace, generate_blake3_hash}; // Import functions from trace.rs
 
 fn main() {
-    let private_key_bytes: GenericArray<u8, U32> = GenericArray::clone_from_slice(&[0u8; 32]);
-    let private_key = SigningKey::from_bytes(&private_key_bytes).expect("Failed to create private key");
+    // Generate a real key pair using Schnorr signatures
+    let (private_key, public_key) = generate_keypair();
 
     let db_path = "./db";
     let mut blockchain = Blockchain::new(db_path);
     println!("Blockchain created with network ID: {}", config::NETWORK_ID);
-
-    // Example private and public keys
-    let private_key = SigningKey::random(&mut OsRng);
-    let public_key = VerifyingKey::from(&private_key);
 
     // Create and sign a transaction
     let tx = Transaction::new(
@@ -73,8 +66,12 @@ fn main() {
     let is_signature_valid = signed_block.verify_signature(&public_key);
     println!("Is Signature Valid: {}", is_signature_valid);
 
-    // Generate a Blake3 hash for trace
-    let trace = create_trace(vec![BaseElement::new(100)]);
-    let hash = generate_blake3_hash(&trace.to_bytes());
+    // Generate a Blake3 hash for trace using the updated trace.rs functions
+    let trace = create_trace(vec![
+        BaseElement::new(100),
+        BaseElement::new(200),
+        BaseElement::new(300),
+    ]); // Ensure trace has at least 8 elements by padding with zeros in create_trace
+    let hash = generate_blake3_hash(&trace);
     println!("Generated Blake3 Hash: {:?}", hash);
 }
