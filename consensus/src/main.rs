@@ -5,7 +5,7 @@ mod transition;
 use pos::{Blockchain, Block};
 use pow::ProofOfWork;
 use std::sync::{Arc, Mutex};
-use foxtrot::config::{
+use common::config::{
     TARGET_BLOCK_TIME, TRANSITION_BLOCK, INITIAL_DIFFICULTY, MAX_BLOCK_SIZE,
     DIFFICULTY_ADJUSTMENT_WINDOW,
 };

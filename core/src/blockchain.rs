@@ -7,9 +7,10 @@ use crate::block::{Block, Signature as BlockSignature};
 use crate::transaction::Transaction;
 use crate::db::Database;
 use cryptography::schnorr::{sign_message, verify_message};
-use zero_knowledge::proof::{ZkProver, verify_proof, Proof};
+use zero_knowledge::proof::{ZkProver, verify_proof};
 use zero_knowledge::trace::create_trace;
-use winterfell::math::fields::f128::BaseElement;
+use winter_prover::Proof;
+use winter_math::fields::f128::BaseElement;
 use common::config::{INITIAL_DIFFICULTY, TARGET_BLOCK_TIME, MAX_BLOCK_SIZE, DIFFICULTY_ADJUSTMENT_WINDOW, MAXIMUM_SUPPLY};
 
 #[derive(Clone, Debug)]

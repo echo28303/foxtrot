@@ -1,14 +1,12 @@
 use winter_crypto::{hashers::Blake3_256, DefaultRandomCoin, RandomCoin};
 use winter_verifier::{verify, Proof as WinterProof, VerifierError, AcceptableOptions};
-use winter_prover::{Trace, TraceTable};
+use winter_prover::{Trace, TraceTable, Prover};
 use winter_air::{ProofOptions, Air, FieldExtension};
 use crate::air::{YourAir, PublicInputs};
 use crate::errors::CustomError;
 use crate::prover::YourProver;
 use std::sync::Arc;
-use winter_math::{fields::f128::BaseElement, FieldElement};
-use winterfell::Prover;
-pub use winter_verifier::Proof;
+use winter_math::fields::f128::BaseElement;
 use winter_fri::FriOptions;
 
 pub struct ZkProver {
@@ -35,10 +33,22 @@ impl ZkProver {
             0,   // Grinding factor
             FieldExtension::None,
             4,   // FRI folding factor
-            16,  // FRI reduction factor
+            16,  // FRI reduction factor (ensure this fits the FRI protocol)
         );
-        let fri_options = FriOptions::new(16, 4, 15);
-        let air = Arc::new(YourAir::new(trace_info, PublicInputs { inputs: vec![] }, proof_options));
+
+        // FRI options: Ensure max remainder size is one less than a power of two
+        let fri_options = FriOptions::new(
+            16, // Blowup factor
+            4,  // Folding factor
+            7   // Max remainder size (7 is one less than 8, a power of two)
+        );
+
+        let air = Arc::new(YourAir::new(
+            trace_info,
+            PublicInputs { inputs: vec![] },
+            proof_options
+        ));
+
         let seed = [BaseElement::new(1)];
         let coin = DefaultRandomCoin::<Blake3_256<BaseElement>>::new(&seed);
         let prover = YourProver::new(air.clone(), coin, &fri_options);

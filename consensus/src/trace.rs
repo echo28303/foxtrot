@@ -1,9 +1,5 @@
-// consensus/src/trace.rs
-
-use winterfell::{
-    math::fields::f128::BaseElement, 
-    FieldExtension, HashFunction, ProofOptions, StarkProof, Trace, VerifierError, 
-};
+use winter_math::fields::f128::BaseElement;
+use winterfell::{FieldExtension, HashFunction, ProofOptions, StarkProof, Trace, VerifierError};
 use winterfell::crypto::hashers::Blake3_256;
 use crate::circuit::SquareRootCircuit;
 

@@ -1,10 +1,7 @@
-// consensus/src/circuit.rs
+use winterfell::{FieldExtension, HashFunction, ProofOptions, StarkProof, Trace, VerifierError};
+use blake3::Hasher;
+use winter_math::fields::f128::BaseElement;
 
-use winterfell::{
-    math::fields::f128::BaseElement, 
-    FieldExtension, HashFunction, ProofOptions, StarkProof, Trace, VerifierError, 
-};
-use winterfell::crypto::hashers::Blake3_256;
 
 pub struct SquareRootCircuit {
     pub x: BaseElement,

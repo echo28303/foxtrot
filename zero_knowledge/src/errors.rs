@@ -1,6 +1,4 @@
-// zero_knowledge/src/error.rs
-
-use winterfell::ProverError;
+use winter_prover::ProverError;
 use std::error::Error;
 use std::fmt;
 

@@ -1,9 +1,8 @@
 use winter_math::{fields::f128::BaseElement, FieldElement};
 use winter_crypto::{hashers::Blake3_256, DefaultRandomCoin};
 use winter_air::{Air, TraceInfo, AuxRandElements, ProofOptions};
-use winter_prover::{Prover, StarkDomain, TracePolyTable, DefaultTraceLde};
+use winter_prover::{Prover, StarkDomain, TracePolyTable, DefaultTraceLde, TraceTable};
 use winter_prover::matrix::ColMatrix;
-use winterfell::TraceTable;
 use winter_fri::FriOptions; // Import FriOptions
 use std::sync::Arc;
 use crate::air::{YourAir, PublicInputs};

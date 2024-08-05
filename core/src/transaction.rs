@@ -3,9 +3,10 @@ use k256::ecdsa::signature::{Signer, Verifier};
 use serde::{Serialize, Deserialize};
 use serde::de::{self, Deserializer, Visitor};
 use serde::ser::{SerializeStruct, Serializer};
-use zero_knowledge::proof::{ZkProver, Proof, verify_proof};
+use zero_knowledge::proof::{ZkProver, verify_proof};
 use zero_knowledge::trace::create_trace;
-use winterfell::math::fields::f128::BaseElement;
+use winter_math::fields::f128::BaseElement;
+use winter_prover::Proof;
 use crate::block::Signature;
 use std::fmt;
 

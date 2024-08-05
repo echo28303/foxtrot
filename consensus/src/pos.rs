@@ -4,7 +4,7 @@ use crate::block::Block;
 use crate::transaction::Transaction;
 use cryptography::schnorr::sign_message;
 use zero_knowledge::winterfell::{create_trace, ZkProver};
-use winterfell::math::fields::f128::BaseElement;
+use winter_math::fields::f128::BaseElement;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 impl Blockchain {
