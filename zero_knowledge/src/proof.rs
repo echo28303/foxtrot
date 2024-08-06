@@ -33,7 +33,7 @@ impl ZkProver {
             0,   // Grinding factor
             FieldExtension::None,
             4,   // FRI folding factor
-            16,  // FRI reduction factor (ensure this fits the FRI protocol)
+            7,   // FRI reduction factor (ensure this fits the FRI protocol)
         );
 
         // FRI options: Ensure max remainder size is one less than a power of two

@@ -1,4 +1,4 @@
-use winter_air::{Air, TraceInfo, ProofOptions, AirContext, EvaluationFrame, Assertion};
+use winter_air::{Air, TraceInfo, ProofOptions, AirContext, EvaluationFrame, Assertion, TransitionConstraintDegree};
 use winter_math::{fields::f128::BaseElement, FieldElement, ToElements};
 
 #[derive(Clone)]
@@ -27,9 +27,11 @@ impl Air for YourAir {
     type GkrVerifier = ();  // Modify this according to your requirements
 
     fn new(trace_info: TraceInfo, public_inputs: PublicInputs, options: ProofOptions) -> Self {
-        let transition_degrees = vec![];  // Specify your transition degrees
-        let num_transition_constraints = 0;  // Set the number of transition constraints
+        // Specify your transition degrees using TransitionConstraintDegree
+        let transition_degrees = vec![TransitionConstraintDegree::new(1)];  // Example degree; adjust according to your needs
+        let num_transition_constraints = transition_degrees.len();
         let context = AirContext::new(trace_info.clone(), transition_degrees, num_transition_constraints, options.clone());
+
         Self {
             trace_info,
             _public_inputs: public_inputs,

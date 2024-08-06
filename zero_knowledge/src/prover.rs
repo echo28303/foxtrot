@@ -3,7 +3,7 @@ use winter_crypto::{hashers::Blake3_256, DefaultRandomCoin};
 use winter_air::{Air, TraceInfo, AuxRandElements, ProofOptions};
 use winter_prover::{Prover, StarkDomain, TracePolyTable, DefaultTraceLde, TraceTable};
 use winter_prover::matrix::ColMatrix;
-use winter_fri::FriOptions; // Import FriOptions
+use winter_fri::FriOptions;
 use std::sync::Arc;
 use crate::air::{YourAir, PublicInputs};
 use crate::evaluator::YourConstraintEvaluator;
@@ -11,7 +11,7 @@ use crate::evaluator::YourConstraintEvaluator;
 pub struct YourProver<'a> {
     air: Arc<YourAir>,
     _coin: DefaultRandomCoin<Blake3_256<BaseElement>>,
-    _fri_options: &'a FriOptions, // Store FriOptions by reference
+    _fri_options: &'a FriOptions,
 }
 
 impl<'a> YourProver<'a> {
@@ -39,16 +39,20 @@ impl<'a> Prover for YourProver<'a> {
 
     fn new_trace_lde<E: FieldElement<BaseField = Self::BaseField>>(
         &self,
-        _trace_info: &TraceInfo,
-        _trace: &ColMatrix<Self::BaseField>,
-        _domain: &StarkDomain<Self::BaseField>,
+        trace_info: &TraceInfo,
+        trace: &ColMatrix<Self::BaseField>,
+        domain: &StarkDomain<Self::BaseField>,
     ) -> (Self::TraceLde<E>, TracePolyTable<E>) {
-        // Use fri_options in creating the trace LDE
-        if self._fri_options.blowup_factor() == 16 {
-            println!("FRI options blowup factor is set correctly.");
-        }
-        // Your implementation for creating a new trace LDE
-        unimplemented!()
+        // Create the low-degree extension of the trace
+        let trace_lde = DefaultTraceLde::new(trace_info, trace, domain);
+
+        // Extract the polynomials from the LDE
+        let main_trace_polys = trace_lde.get_main_segment_polys();  // Verify method
+
+        // Create the polynomial table using the LDE polynomials
+        let trace_poly_table = TracePolyTable::new(main_trace_polys);
+
+        (trace_lde, trace_poly_table)
     }
 
     fn new_evaluator<'b, E: FieldElement<BaseField = Self::BaseField>>(
