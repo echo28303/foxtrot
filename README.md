@@ -6,7 +6,7 @@ Foxtrot’s proof of work mechanism uniquely aligns with the labor theory of val
 
 ### 2. zk-STARKS for Confidentiality
 
-Foxtrot incorporates zk-STARKS (Zero-Knowledge Scalable Transparent Argument of Knowledge) to provide unparalleled privacy and security for all transactions on the network. This advanced cryptographic technology allows transactions to be verified without disclosing sensitive information, ensuring the confidentiality of account balances and transaction details. By maintaining privacy at the core of its operations, Foxtrot appeals to users and businesses that prioritize data security and confidentiality, setting it apart from many other blockchain projects.
+Foxtrot incorporates Zero-Knowledge Scalable Transparent ARguments of Knowledge (zk-STARKs) to provide unparalleled privacy and security for all transactions on the network. This advanced cryptographic technology allows transactions to be verified without disclosing sensitive information, ensuring the confidentiality of account balances and transaction details. By maintaining privacy at the core of its operations, Foxtrot appeals to users and businesses that prioritize data security and confidentiality, setting it apart from many other blockchain projects.
 
 ### 3. Transition to Proof of Stake and Deflationary Model
 
