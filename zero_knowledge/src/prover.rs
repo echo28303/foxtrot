@@ -1,7 +1,7 @@
 use winter_math::{fields::f128::BaseElement, FieldElement};
 use winter_crypto::{hashers::Blake3_256, DefaultRandomCoin};
 use winter_air::{Air, TraceInfo, AuxRandElements, ProofOptions};
-use winter_prover::{Prover, StarkDomain, TracePolyTable, DefaultTraceLde, TraceTable};
+use winter_prover::{Prover, StarkDomain, TracePolyTable, DefaultTraceLde, TraceTable, EvaluationFrame};
 use winter_prover::matrix::ColMatrix;
 use winter_fri::FriOptions;
 use std::sync::Arc;
@@ -37,22 +37,39 @@ impl<'a> Prover for YourProver<'a> {
         PublicInputs { inputs: vec![] }
     }
 
-    fn new_trace_lde<E: FieldElement<BaseField = Self::BaseField>>(
+    fn new_trace_lde<E>(
         &self,
         trace_info: &TraceInfo,
         trace: &ColMatrix<Self::BaseField>,
         domain: &StarkDomain<Self::BaseField>,
-    ) -> (Self::TraceLde<E>, TracePolyTable<E>) {
+    ) -> (Self::TraceLde<E>, TracePolyTable<E>)
+    where
+        E: FieldElement<BaseField = Self::BaseField> + Into<Self::BaseField>,
+    {
         // Create the low-degree extension of the trace
-        let trace_lde = DefaultTraceLde::new(trace_info, trace, domain);
+        let mut default_trace_lde = DefaultTraceLde::<E, Self::HashFn>::new(trace_info, trace, domain);
 
-        // Extract the polynomials from the LDE
-        let main_trace_polys = trace_lde.get_main_segment_polys();  // Verify method
+        // Initialize an evaluation frame with the correct number of columns
+        let num_columns = trace.num_cols();
+        let mut frame = EvaluationFrame::<E>::new(num_columns);
 
-        // Create the polynomial table using the LDE polynomials
-        let trace_poly_table = TracePolyTable::new(main_trace_polys);
+        // Use the correct method on DefaultTraceLde
+        default_trace_lde.read_main_frame_into(0, &mut frame);
 
-        (trace_lde, trace_poly_table)
+        // Extract columns from the frame
+        let mut lde_columns: Vec<Vec<E::BaseField>> = vec![Vec::with_capacity(frame.current().len()); num_columns];
+        for (i, column) in lde_columns.iter_mut().enumerate() {
+            column.push(frame.current()[i].into()); // Convert E to BaseElement
+            column.push(frame.next()[i].into());    // Convert E to BaseElement
+        }
+
+        // Construct a ColMatrix from the extracted columns
+        let lde_matrix = ColMatrix::<E::BaseField>::new(lde_columns);
+
+        // Create the polynomial table using the LDE columns
+        let trace_poly_table = TracePolyTable::<E>::new(lde_matrix);
+
+        (default_trace_lde, trace_poly_table) // Return the correct tuple
     }
 
     fn new_evaluator<'b, E: FieldElement<BaseField = Self::BaseField>>(
