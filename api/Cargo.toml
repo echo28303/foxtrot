@@ -1,0 +1,13 @@
+[package]
+name = "api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = "4.8.0"
+async-graphql = "7.0.7"
+async-graphql-actix-web = "7.0.7"
+tokio = { version = "1.39.2", features = ["full"] }
+serde = { version = "1.0.204", features = ["derive"] }
+serde_json = "1.0.120"
+core = { path = "../core" }
