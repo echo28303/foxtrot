@@ -1,29 +1,36 @@
-use actix_web::{App, HttpServer, web};
+use actix_web::{web, App, HttpServer};
+use async_graphql::Schema;
+use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use std::sync::Mutex;
-mod routes;
-mod handlers;
-use crate::core::blockchain::Blockchain;
+use core::blockchain::Blockchain;
+use graphql::schema::{MySchema, QueryRoot};
+use common::config::{INITIAL_DIFFICULTY, TARGET_BLOCK_TIME, MAX_BLOCK_SIZE, DIFFICULTY_ADJUSTMENT_WINDOW, NETWORK_ID};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let blockchain = web::Data::new(Mutex::new(Blockchain::new(
         "./db",
-        10, // block_reward
-        1,  // initial_difficulty
-        1_000_000, // max_block_size
-        8, // block_time (in seconds)
-        2016, // difficulty_adjustment_window (number of blocks)
-        String::from("testnet"),
-        125_000_000_000_000, // transition_block
     )));
+
+    // Create GraphQL schema
+    let schema = Schema::build(QueryRoot, EmptyMutation, EmptySubscription)
+        .finish();
 
     HttpServer::new(move || {
         App::new()
             .app_data(blockchain.clone())
-            .configure(routes::configure)
+            .app_data(web::Data::new(schema.clone()))
+            .service(
+                web::resource("/graphql")
+                    .guard(guard::Post())
+                    .to(graphql_handler)
+            )
     })
     .bind("127.0.0.1:8080")?
     .run()
     .await
 }
 
+async fn graphql_handler(schema: web::Data<MySchema>, req: GraphQLRequest) -> GraphQLResponse {
+    schema.execute(req.into_inner()).await.into()
+}
