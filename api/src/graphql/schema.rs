@@ -1,10 +1,14 @@
-use async_graphql::{Context, Object, Schema, EmptyMutation, EmptySubscription};
+use async_graphql::{Context, EmptyMutation, Object, Schema, SimpleObject, Subscription};
+use async_graphql::futures_util::Stream;
+use async_graphql::futures_util::stream::StreamExt;
 use std::sync::Mutex;
+use std::time::Duration;
+use tokio::time::interval;
 use core::blockchain::Blockchain;
 use core::transaction::Transaction;
 use core::block::Block;
 
-pub type MySchema = Schema<QueryRoot, EmptyMutation, EmptySubscription>;
+pub type MySchema = Schema<QueryRoot, EmptyMutation, SubscriptionRoot>;
 
 pub struct QueryRoot;
 
@@ -46,6 +50,36 @@ impl QueryRoot {
     async fn get_pending_transactions(&self, ctx: &Context<'_>) -> Vec<Transaction> {
         let blockchain = ctx.data::<Mutex<Blockchain>>().unwrap().lock().unwrap();
         blockchain.pending_transactions.clone()
+    }
+}
+
+pub struct SubscriptionRoot;
+
+#[Subscription]
+impl SubscriptionRoot {
+    async fn new_block_notification(&self, ctx: &Context<'_>) -> impl Stream<Item = BlockData> {
+        let blockchain = ctx.data::<Mutex<Blockchain>>().unwrap();
+        let mut interval = interval(Duration::from_secs(1));
+
+        async_stream::stream! {
+            loop {
+                interval.tick().await;
+                let block = blockchain.lock().unwrap().blocks.last().cloned();
+                if let Some(block) = block {
+                    yield BlockData {
+                        index: block.index,
+                        previous_hash: block.previous_hash.clone(),
+                        timestamp: block.timestamp,
+                        nonce: block.nonce,
+                        miner: block.miner.clone(),
+                        signature: block.signature.clone(),
+                        reward: block.reward,
+                        transactions: block.transactions.clone(),
+                        hash: block.hash.clone(),
+                    };
+                }
+            }
+        }
     }
 }
 

@@ -1,18 +1,26 @@
-// consensus/src/pos.rs
-
-use crate::block::Block;
-use crate::transaction::Transaction;
+use core::block::Block;
+use core::transaction::Transaction;
 use cryptography::schnorr::sign_message;
-use zero_knowledge::winterfell::{create_trace, ZkProver};
+use zero_knowledge::proof::{create_trace, ZkProver};
 use winter_math::fields::f128::BaseElement;
+use k256::ecdsa::SigningKey;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+pub struct Blockchain {
+    pub blocks: Vec<Block>,
+    // other fields
+}
+
 impl Blockchain {
+    pub fn new(db_path: &str) -> Self {
+        // initialize your blockchain
+    }
+
     pub fn mine_pos_block(&mut self, miner: String, stake_modifier: String, private_key: &SigningKey) -> Block {
         let previous_block = self.blocks.last().expect("Blockchain is empty");
         let index = previous_block.index + 1;
         let previous_hash = &previous_block.previous_hash;
-        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis();
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis() as u64;
         let nonce = 0;
 
         // Example transaction
@@ -34,5 +42,8 @@ impl Blockchain {
 
         new_block
     }
-}
 
+    pub fn add_block(&mut self, block: Block) {
+        // Add your logic to add block
+    }
+}

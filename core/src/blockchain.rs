@@ -11,14 +11,21 @@ use zero_knowledge::proof::{ZkProver, verify_proof};
 use zero_knowledge::trace::create_trace;
 use winter_prover::Proof;
 use winter_math::fields::f128::BaseElement;
-use common::config::{INITIAL_DIFFICULTY, TARGET_BLOCK_TIME, MAX_BLOCK_SIZE, DIFFICULTY_ADJUSTMENT_WINDOW, MAXIMUM_SUPPLY};
+use common::config::{
+    INITIAL_DIFFICULTY, 
+    INITIAL_TARGET_BLOCK_TIME, 
+    MAX_BLOCK_SIZE, 
+    MAXIMUM_SUPPLY, 
+    INITIAL_ADJUSTMENT_WINDOW, 
+    ADJUSTMENT_WINDOW, 
+    BLOCK_TIME_ADJUSTMENT_PERCENT,
+};
 
 #[derive(Clone, Debug)]
 pub struct Blockchain {
     pub blocks: Vec<Block>,
     pub target_block_time: u64,
     pub max_block_size: u64,
-    pub difficulty_adjustment_window: u64,
     pub current_difficulty: u64,
     pub current_supply: u64, // Track the current supply
     pub db: Arc<Mutex<Database>>,
@@ -28,9 +35,8 @@ impl Blockchain {
     pub fn new(db_path: &str) -> Self {
         Self {
             blocks: vec![],
-            target_block_time: TARGET_BLOCK_TIME,
+            target_block_time: INITIAL_TARGET_BLOCK_TIME,
             max_block_size: MAX_BLOCK_SIZE as u64,
-            difficulty_adjustment_window: DIFFICULTY_ADJUSTMENT_WINDOW as u64,
             current_difficulty: INITIAL_DIFFICULTY,
             current_supply: 0, // Initialize current supply
             db: Arc::new(Mutex::new(Database::new(db_path))),
@@ -42,35 +48,57 @@ impl Blockchain {
         self.blocks.push(block.clone());
         // Store block in the database
         self.db.lock().unwrap().store_block(&block).expect("Failed to store block");
+        // Adjust difficulty and block time after adding a block
+        self.adjust_difficulty_and_block_time();
     }
 
-    pub fn adjust_difficulty(&self) -> u64 {
+    pub fn adjust_difficulty_and_block_time(&mut self) {
+        let window_size = if self.blocks.len() < INITIAL_ADJUSTMENT_WINDOW {
+            INITIAL_ADJUSTMENT_WINDOW // Use initial window size during the launch phase
+        } else {
+            ADJUSTMENT_WINDOW // Normal window size once stabilized
+        };
+
         let last_index = self.blocks.len() as u64 - 1;
-        if last_index % self.difficulty_adjustment_window != 0 || last_index == 0 {
-            return self.current_difficulty; // Current difficulty
+        if last_index == 0 || last_index % window_size as u64 != 0 {
+            return; // No adjustment if it's not the end of a window
         }
 
-        let window_start = last_index - self.difficulty_adjustment_window;
-        let window_end = last_index;
+        let window_start = (last_index - window_size as u64 + 1) as usize;
+        let window_end = last_index as usize;
 
-        let start_block = &self.blocks[window_start as usize];
-        let end_block = &self.blocks[window_end as usize];
+        let start_block = &self.blocks[window_start];
+        let end_block = &self.blocks[window_end];
 
         let actual_time_taken = end_block.timestamp - start_block.timestamp;
-        let expected_time_taken = self.target_block_time * self.difficulty_adjustment_window;
+        let expected_time_taken = self.target_block_time * window_size as u64;
 
-        let new_difficulty = (self.current_difficulty as u128
+        // Adjust difficulty
+        self.current_difficulty = (self.current_difficulty as u128
             * expected_time_taken as u128
             / actual_time_taken as u128) as u64;
 
-        new_difficulty
+        // Adjust block time based on propagation
+        self.target_block_time = self.adjust_block_time(actual_time_taken, expected_time_taken);
+    }
+
+    pub fn adjust_block_time(&self, actual_time_taken: u64, expected_time_taken: u64) -> u64 {
+        let percent_change = BLOCK_TIME_ADJUSTMENT_PERCENT as f64 / 100.0;
+
+        if actual_time_taken > expected_time_taken {
+            // Increase block time
+            ((self.target_block_time as f64) * (1.0 + percent_change)) as u64
+        } else {
+            // Decrease block time
+            ((self.target_block_time as f64) * (1.0 - percent_change)) as u64
+        }
     }
 
     pub fn mine_block(&mut self, miner: String, private_key: &SigningKey) -> Block {
         let previous_block = self.blocks.last().expect("Blockchain is empty");
         let index = previous_block.index + 1;
         let previous_hash = &previous_block.previous_hash;
-        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis();
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).expect("Time went backwards").as_millis() as u64;
         let nonce = 0;
 
         let base_reward = self.current_difficulty; // Define a base reward
